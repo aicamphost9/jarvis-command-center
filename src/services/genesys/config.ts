@@ -51,6 +51,7 @@ export interface GenesysConfig {
   apiBase: string;
   loginBase: string;
   wsBase: string;
+  queueFilter: string[]; // empty = all queues
 }
 
 export function getGenesysConfig(): GenesysConfig | null {
@@ -71,7 +72,15 @@ export function getGenesysConfig(): GenesysConfig | null {
     return null;
   }
 
-  return { clientId, clientSecret, region, apiBase, loginBase, wsBase };
+  // Queue filter: comma-separated queue names or IDs
+  // e.g. GENESYS_QUEUE_FILTER="Sales,Support,Billing,VIP"
+  const queueFilterRaw = process.env.GENESYS_QUEUE_FILTER || '';
+  const queueFilter = queueFilterRaw
+    .split(',')
+    .map(q => q.trim())
+    .filter(q => q.length > 0);
+
+  return { clientId, clientSecret, region, apiBase, loginBase, wsBase, queueFilter };
 }
 
 export function isGenesysConfigured(): boolean {

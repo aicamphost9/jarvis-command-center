@@ -1,4 +1,5 @@
 import { RealtimeData, QueueMetrics, AgentStatus, OverviewKPI, LiveFeedItem } from '@/types';
+import { getGenesysConfig } from './config';
 import { getQueues, GenesysQueue } from './routing';
 import { getUsers, mapPresenceToStatus, GenesysUser } from './users';
 import { getQueueObservations, getConversationAggregates, QueueObservation, ConversationAggregate } from './analytics';
@@ -25,11 +26,25 @@ export function addLiveFeedItem(item: Omit<LiveFeedItem, 'id' | 'timestamp'>) {
 let previousOverview: OverviewKPI | null = null;
 
 export async function fetchRealtimeData(): Promise<RealtimeData> {
+  const config = getGenesysConfig();
+  const queueFilter = config?.queueFilter ?? [];
+
   // Step 1: Get queue & user config (cached, ~0 API calls most of the time)
-  const [queuesConfig, usersConfig] = await Promise.all([
+  const [allQueues, usersConfig] = await Promise.all([
     getQueues(),
     getUsers(),
   ]);
+
+  // Filter queues if GENESYS_QUEUE_FILTER is set (match by name or ID)
+  const queuesConfig = queueFilter.length > 0
+    ? allQueues.filter(q =>
+        queueFilter.some(f =>
+          f.toLowerCase() === q.name.toLowerCase() || f === q.id
+        )
+      )
+    : allQueues;
+
+  console.log(`[Genesys] Monitoring ${queuesConfig.length} queues (${queueFilter.length > 0 ? 'filtered' : 'all'})`);
 
   const queueIds = queuesConfig.map(q => q.id);
 
