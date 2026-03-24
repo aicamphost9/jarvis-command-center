@@ -50,44 +50,49 @@ export interface ConversationAggregate {
 // ----- Queue Realtime Observations -----
 
 export async function getQueueObservations(queueIds: string[]): Promise<Map<string, QueueObservation>> {
-  const body = {
-    filter: {
-      type: 'or',
-      predicates: queueIds.map(id => ({
-        type: 'dimension',
-        dimension: 'queueId',
-        operator: 'matches',
-        value: id,
-      })),
-    },
-    metrics: [
-      'oInteracting',
-      'oWaiting',
-    ],
-  };
-
-  const result = await genesysApi<QueueObservationResult>(
-    '/api/v2/analytics/queues/observations/query',
-    { method: 'POST', body }
-  );
-
   const map = new Map<string, QueueObservation>();
+  const batchSize = 200;
 
-  for (const r of result.results) {
-    const queueId = r.group.queueId;
-    const obs: QueueObservation = {
-      queueId,
-      oInteracting: 0,
-      oWaiting: 0,
-      oUserRoutingStatuses: {},
+  for (let i = 0; i < queueIds.length; i += batchSize) {
+    const batch = queueIds.slice(i, i + batchSize);
+
+    const body = {
+      filter: {
+        type: 'or',
+        predicates: batch.map(id => ({
+          type: 'dimension',
+          dimension: 'queueId',
+          operator: 'matches',
+          value: id,
+        })),
+      },
+      metrics: [
+        'oInteracting',
+        'oWaiting',
+      ],
     };
 
-    for (const d of r.data) {
-      if (d.metric === 'oInteracting') obs.oInteracting = d.stats.count ?? 0;
-      if (d.metric === 'oWaiting') obs.oWaiting = d.stats.count ?? 0;
-    }
+    const result = await genesysApi<QueueObservationResult>(
+      '/api/v2/analytics/queues/observations/query',
+      { method: 'POST', body }
+    );
 
-    map.set(queueId, obs);
+    for (const r of result.results) {
+      const queueId = r.group.queueId;
+      const obs: QueueObservation = {
+        queueId,
+        oInteracting: 0,
+        oWaiting: 0,
+        oUserRoutingStatuses: {},
+      };
+
+      for (const d of r.data) {
+        if (d.metric === 'oInteracting') obs.oInteracting = d.stats.count ?? 0;
+        if (d.metric === 'oWaiting') obs.oWaiting = d.stats.count ?? 0;
+      }
+
+      map.set(queueId, obs);
+    }
   }
 
   return map;
@@ -101,59 +106,63 @@ export async function getConversationAggregates(
 ): Promise<Map<string, ConversationAggregate>> {
   const now = new Date();
   const start = new Date(now.getTime() - intervalMs);
-
-  const body = {
-    interval: `${start.toISOString()}/${now.toISOString()}`,
-    granularity: 'PT24H',
-    groupBy: ['queueId'],
-    filter: {
-      type: 'or',
-      predicates: queueIds.map(id => ({
-        type: 'dimension',
-        dimension: 'queueId',
-        operator: 'matches',
-        value: id,
-      })),
-    },
-    metrics: [
-      'nOffered',
-      'nConnected',
-      'tAnswered',
-      'tAbandon',
-      'tAcd',
-      'tHandle',
-      'nTransferred',
-      'tWait',
-      'tTalk',
-      'tHeld',
-      'tAcw',
-      'oServiceLevel',
-    ],
-  };
-
-  const result = await genesysApi<ConversationAggregateResult>(
-    '/api/v2/analytics/conversations/aggregates/query',
-    { method: 'POST', body }
-  );
-
   const map = new Map<string, ConversationAggregate>();
+  const batchSize = 200;
 
-  for (const r of result.results) {
-    const queueId = r.group.queueId;
-    const agg: ConversationAggregate = {
-      nOffered: 0, nConnected: 0, tAnswered: 0, tAbandon: 0,
-      tAcd: 0, tHandle: 0, nTransferred: 0, tWait: 0,
-      tTalk: 0, tHeld: 0, tAcw: 0, oServiceLevel: 0,
+  for (let i = 0; i < queueIds.length; i += batchSize) {
+    const batch = queueIds.slice(i, i + batchSize);
+
+    const body = {
+      interval: `${start.toISOString()}/${now.toISOString()}`,
+      granularity: 'PT24H',
+      groupBy: ['queueId'],
+      filter: {
+        type: 'or',
+        predicates: batch.map(id => ({
+          type: 'dimension',
+          dimension: 'queueId',
+          operator: 'matches',
+          value: id,
+        })),
+      },
+      metrics: [
+        'nOffered',
+        'nConnected',
+        'tAnswered',
+        'tAbandon',
+        'tAcd',
+        'tHandle',
+        'nTransferred',
+        'tWait',
+        'tTalk',
+        'tHeld',
+        'tAcw',
+        'oServiceLevel',
+      ],
     };
 
-    for (const d of r.data) {
-      const key = d.metric as keyof ConversationAggregate;
-      if (key in agg) {
-        (agg[key] as number) = d.stats.count ?? d.stats.sum ?? d.stats.ratio ?? 0;
-      }
-    }
+    const result = await genesysApi<ConversationAggregateResult>(
+      '/api/v2/analytics/conversations/aggregates/query',
+      { method: 'POST', body }
+    );
 
-    map.set(queueId, agg);
+    for (const r of result.results) {
+      const queueId = r.group.queueId;
+      const agg: ConversationAggregate = {
+        nOffered: 0, nConnected: 0, tAnswered: 0, tAbandon: 0,
+        tAcd: 0, tHandle: 0, nTransferred: 0, tWait: 0,
+        tTalk: 0, tHeld: 0, tAcw: 0, oServiceLevel: 0,
+      };
+
+      for (const d of r.data) {
+        const key = d.metric as keyof ConversationAggregate;
+        if (key in agg) {
+          (agg[key] as number) = d.stats.count ?? d.stats.sum ?? d.stats.ratio ?? 0;
+        }
+      }
+
+      map.set(queueId, agg);
+    }
   }
 
   return map;
