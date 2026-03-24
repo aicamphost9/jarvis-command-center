@@ -2,7 +2,7 @@
 
 import { Phone, Users, Clock, Target, PhoneOff, Star, CheckCircle, Headphones } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
-import { cn, formatDuration, getDeltaColor, getDeltaIcon } from '@/lib/utils';
+import { cn, formatDuration, formatNumber, getDeltaColor, getDeltaIcon } from '@/lib/utils';
 
 interface KPICardProps {
   label: string;
@@ -25,10 +25,10 @@ function KPICard({ label, value, delta, icon, invertDelta, suffix }: KPICardProp
       </div>
       <div className="flex items-end justify-between">
         <div className="text-2xl font-bold font-mono text-text-primary">
-          {value}{suffix}
+          {typeof value === 'number' ? formatNumber(value) : value}{suffix}
         </div>
         <div className={cn('text-xs font-medium flex items-center gap-0.5', getDeltaColor(delta, invertDelta))}>
-          {getDeltaIcon(delta)} {Math.abs(delta).toFixed(1)}%
+          {getDeltaIcon(delta)} {formatNumber(Math.abs(delta))}%
         </div>
       </div>
     </div>

@@ -41,7 +41,7 @@ function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomFloat(min: number, max: number, decimals = 1): number {
+function randomFloat(min: number, max: number, decimals = 2): number {
   return parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
 }
 
@@ -180,12 +180,12 @@ function generateOverview(queues: QueueMetrics[], agents: AgentStatus[]): Overvi
     totalInQueueDelta: randomFloat(-20, 180),
     agentsOnline: onlineAgents,
     agentsOnlineDelta: randomBetween(-3, 2),
-    slaPercent: parseFloat(avgSLA.toFixed(1)),
+    slaPercent: parseFloat(avgSLA.toFixed(2)),
     slaTarget: 85,
     slaDelta: randomFloat(-5, 3),
     aht: Math.round(avgAHT),
     ahtDelta: randomFloat(-15, 15),
-    abandonRate: parseFloat(avgAbandon.toFixed(1)),
+    abandonRate: parseFloat(avgAbandon.toFixed(2)),
     abandonRateDelta: randomFloat(-3, 5),
     csat: randomFloat(3.8, 4.5),
     csatDelta: randomFloat(-0.3, 0.3),

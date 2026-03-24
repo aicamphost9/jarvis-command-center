@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore } from '@/store/app-store';
-import { cn, formatDuration, getStatusColor } from '@/lib/utils';
+import { cn, formatDuration, formatNumber, getStatusColor } from '@/lib/utils';
 
 export default function QueueHealth() {
   const { realtimeData } = useAppStore();
@@ -53,7 +53,7 @@ export default function QueueHealth() {
               <div className="flex justify-between">
                 <span className="text-text-muted">SLA</span>
                 <span className={cn('font-mono font-medium', getStatusColor(queue.status))}>
-                  {queue.slaPercent}%
+                  {formatNumber(queue.slaPercent)}%
                 </span>
               </div>
               <div className="flex justify-between">
@@ -62,7 +62,7 @@ export default function QueueHealth() {
                   'font-mono font-medium',
                   queue.abandonRate > 10 ? 'text-accent-red' : queue.abandonRate > 5 ? 'text-accent-yellow' : 'text-text-primary'
                 )}>
-                  {queue.abandonRate}%
+                  {formatNumber(queue.abandonRate)}%
                 </span>
               </div>
             </div>

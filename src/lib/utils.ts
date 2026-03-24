@@ -1,3 +1,8 @@
+export function formatNumber(value: number): string {
+  if (Number.isInteger(value)) return value.toString();
+  return value.toFixed(2);
+}
+
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);

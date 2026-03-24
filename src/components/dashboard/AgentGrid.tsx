@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore } from '@/store/app-store';
-import { cn, getAgentStatusColor, getAgentStatusLabel, formatDuration } from '@/lib/utils';
+import { cn, getAgentStatusColor, getAgentStatusLabel, formatDuration, formatNumber } from '@/lib/utils';
 
 export default function AgentGrid() {
   const { realtimeData } = useAppStore();
@@ -76,7 +76,7 @@ export default function AgentGrid() {
                 <span className="text-text-primary">{agent.name}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-text-muted font-mono">{formatDuration(agent.aht)}</span>
-                  <span className="text-accent-green font-mono font-bold">{agent.csat?.toFixed(1)}</span>
+                  <span className="text-accent-green font-mono font-bold">{agent.csat != null ? formatNumber(agent.csat) : '-'}</span>
                 </div>
               </div>
             ))}
@@ -93,7 +93,7 @@ export default function AgentGrid() {
                 <span className="text-text-primary">{agent.name}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-text-muted font-mono">{formatDuration(agent.aht)}</span>
-                  <span className="text-accent-red font-mono font-bold">{agent.csat?.toFixed(1)}</span>
+                  <span className="text-accent-red font-mono font-bold">{agent.csat != null ? formatNumber(agent.csat) : '-'}</span>
                 </div>
               </div>
             ))}
