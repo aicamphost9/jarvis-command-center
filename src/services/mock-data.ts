@@ -25,7 +25,6 @@ const AGENT_STATUSES: AgentStatus['status'][] = [
   'acw', 'acw',
   'break',
   'meal',
-  'offline',
   'meeting',
 ];
 

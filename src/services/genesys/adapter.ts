@@ -122,7 +122,7 @@ function transformQueues(
 
 function transformAgents(users: GenesysUser[]): AgentStatus[] {
   return users
-    .filter(u => u.presence) // Only users with presence data (agents)
+    .filter(u => u.presence && u.presence.presenceDefinition?.systemPresence?.toUpperCase() !== 'OFFLINE') // Exclude offline agents
     .map(user => {
       const systemPresence = user.presence?.presenceDefinition?.systemPresence ?? 'Offline';
       const routingStatus = user.routingStatus?.status;
