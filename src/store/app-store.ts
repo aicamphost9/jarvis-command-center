@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { RealtimeData, ChatMessage, Alert } from '@/types';
-import { generateMockRealtimeData, evolveMockData } from '@/services/mock-data';
 
 interface AppState {
   // Realtime data
   realtimeData: RealtimeData | null;
+  dataSource: 'genesys' | 'mock' | 'mock-fallback' | null;
   isConnected: boolean;
 
   // Chat
@@ -19,8 +19,7 @@ interface AppState {
   chatExpanded: boolean;
 
   // Actions
-  initRealtimeData: () => void;
-  updateRealtimeData: () => void;
+  fetchRealtimeData: () => Promise<void>;
   addMessage: (message: ChatMessage) => void;
   updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
   setAiTyping: (typing: boolean) => void;
@@ -29,8 +28,9 @@ interface AppState {
   acknowledgeAlert: (id: string) => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set) => ({
   realtimeData: null,
+  dataSource: null,
   isConnected: false,
   messages: [
     {
@@ -54,15 +54,29 @@ export const useAppStore = create<AppState>((set, get) => ({
   activePanel: 'both',
   chatExpanded: false,
 
-  initRealtimeData: () => {
-    const data = generateMockRealtimeData();
-    set({ realtimeData: data, isConnected: true });
-  },
+  fetchRealtimeData: async () => {
+    try {
+      const response = await fetch('/api/metrics');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-  updateRealtimeData: () => {
-    const state = get();
-    if (state.realtimeData) {
-      set({ realtimeData: evolveMockData(state.realtimeData) });
+      const data = await response.json();
+      const { source, ...realtimeData } = data;
+
+      set({
+        realtimeData: {
+          ...realtimeData,
+          lastUpdated: new Date(realtimeData.lastUpdated),
+          liveFeed: realtimeData.liveFeed?.map((item: Record<string, unknown>) => ({
+            ...item,
+            timestamp: new Date(item.timestamp as string),
+          })) ?? [],
+        },
+        dataSource: source,
+        isConnected: true,
+      });
+    } catch (error) {
+      console.error('[Store] Failed to fetch metrics:', error);
+      set({ isConnected: false });
     }
   },
 

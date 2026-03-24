@@ -9,15 +9,16 @@ import ChatConsole from '@/components/chat/ChatConsole';
 import { cn } from '@/lib/utils';
 
 export default function Home() {
-  const { activePanel, initRealtimeData, updateRealtimeData } = useAppStore();
+  const { activePanel, fetchRealtimeData } = useAppStore();
 
   useEffect(() => {
-    initRealtimeData();
+    // Fetch immediately, then poll every 10 seconds
+    fetchRealtimeData();
     const interval = setInterval(() => {
-      updateRealtimeData();
-    }, 5000);
+      fetchRealtimeData();
+    }, 10000);
     return () => clearInterval(interval);
-  }, [initRealtimeData, updateRealtimeData]);
+  }, [fetchRealtimeData]);
 
   return (
     <div className="h-screen flex flex-col bg-bg-void relative overflow-hidden">

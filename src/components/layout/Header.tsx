@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 
 export default function Header() {
-  const { isConnected, activePanel, setActivePanel } = useAppStore();
+  const { isConnected, dataSource, activePanel, setActivePanel } = useAppStore();
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function Header() {
             : 'border-accent-red/20 bg-accent-red/5 text-accent-red'
         )}>
           {isConnected ? <Wifi size={10} /> : <WifiOff size={10} />}
-          {isConnected ? 'SYSTEM ONLINE' : 'DISCONNECTED'}
+          {isConnected ? (dataSource === 'genesys' ? 'GENESYS LIVE' : 'MOCK DATA') : 'DISCONNECTED'}
           <div className={cn(
             'w-1.5 h-1.5 rounded-full',
             isConnected ? 'bg-accent-green animate-pulse-glow' : 'bg-accent-red animate-blink-critical'
