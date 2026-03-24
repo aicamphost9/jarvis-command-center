@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, User, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ChatMessage } from '@/types';
 import { cn, formatTimeShort } from '@/lib/utils';
 
@@ -8,24 +8,17 @@ interface ChatBubbleProps {
   message: ChatMessage;
 }
 
-// Simple markdown renderer
 function renderMarkdown(text: string): string {
   return text
-    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Headers
-    .replace(/^### (.*$)/gm, '<h3 class="text-sm font-semibold text-accent-cyan mt-3 mb-1">$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2 class="text-sm font-bold text-accent-cyan mt-3 mb-1">$1</h2>')
-    // Bullet points
-    .replace(/^- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-    // Tables (simple)
+    .replace(/^### (.*$)/gm, '<h3 class="text-sm font-display font-semibold text-accent-cyan mt-3 mb-1 tracking-wide">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="text-sm font-display font-bold text-accent-cyan mt-3 mb-1 tracking-wide">$1</h2>')
+    .replace(/^- (.*$)/gm, '<li class="ml-4">$1</li>')
     .replace(/\|(.+)\|/g, (match) => {
       const cells = match.split('|').filter(c => c.trim());
-      if (cells.every(c => /^[\s-]+$/.test(c))) return ''; // separator row
-      const tag = cells.some(c => /^[\s-]+$/.test(c)) ? 'td' : 'td';
-      return `<tr>${cells.map(c => `<${tag} class="border border-border px-2 py-1 text-xs">${c.trim()}</${tag}>`).join('')}</tr>`;
+      if (cells.every(c => /^[\s-]+$/.test(c))) return '';
+      return `<tr>${cells.map(c => `<td class="border border-border px-2 py-1 text-xs">${c.trim()}</td>`).join('')}</tr>`;
     })
-    // Line breaks
     .replace(/\n/g, '<br/>');
 }
 
@@ -33,28 +26,46 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === 'user';
 
   return (
-    <div className={cn('flex gap-2', isUser ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex gap-3 animate-fade-in-up', isUser ? 'flex-row-reverse' : 'flex-row')}>
       {/* Avatar */}
       <div className={cn(
-        'w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+        'w-8 h-8 rounded-sm flex items-center justify-center shrink-0 mt-0.5 border',
         isUser
-          ? 'bg-accent-blue/20 text-accent-blue'
-          : 'bg-gradient-to-br from-accent-cyan/20 to-accent-blue/20 text-accent-cyan',
+          ? 'bg-accent-blue/10 border-accent-blue/20 text-accent-blue'
+          : 'bg-accent-cyan/5 border-accent-cyan/20 text-accent-cyan',
       )}>
-        {isUser ? <User size={14} /> : <Bot size={14} />}
+        {isUser ? (
+          <span className="font-display text-[10px] font-bold">USR</span>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        )}
       </div>
 
       {/* Bubble */}
       <div className={cn(
-        'max-w-[85%] rounded-lg px-3 py-2',
+        'max-w-[85%] rounded-sm px-4 py-3 relative',
         isUser
-          ? 'bg-accent-blue/20 border border-accent-blue/30'
-          : 'bg-bg-card border border-border',
+          ? 'bg-accent-blue/8 border border-accent-blue/15'
+          : 'hud-card',
       )}>
+        {/* Sender label */}
+        <div className={cn(
+          'text-[8px] font-display font-bold tracking-[0.2em] mb-1.5',
+          isUser ? 'text-accent-blue/60 text-right' : 'text-accent-cyan/50',
+        )}>
+          {isUser ? 'OPERATOR' : 'JARVIS AI'}
+        </div>
+
         {message.isLoading && !message.content ? (
-          <div className="flex items-center gap-2 text-text-muted text-sm py-1">
-            <Loader2 size={14} className="animate-spin text-accent-cyan" />
-            <span>กำลังวิเคราะห์...</span>
+          <div className="flex items-center gap-2.5 py-1">
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" style={{ animationDelay: '200ms' }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" style={{ animationDelay: '400ms' }} />
+            </div>
+            <span className="text-xs text-text-muted font-mono">ANALYZING...</span>
           </div>
         ) : (
           <div
@@ -65,8 +76,8 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
 
         {/* Timestamp */}
         <div className={cn(
-          'text-[10px] mt-1',
-          isUser ? 'text-accent-blue/50 text-right' : 'text-text-muted',
+          'text-[9px] font-mono mt-2 tracking-wider',
+          isUser ? 'text-accent-blue/30 text-right' : 'text-text-muted/50',
         )}>
           {formatTimeShort(new Date(message.timestamp))}
         </div>

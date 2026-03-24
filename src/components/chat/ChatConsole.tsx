@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Sparkles, Loader2, Zap } from 'lucide-react';
+import { Send, Loader2, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/types';
 import ChatBubble from './ChatBubble';
 
 const QUICK_ACTIONS = [
-  { label: 'สรุปสถานะตอนนี้', icon: '📊' },
-  { label: 'Queue ไหนมีปัญหา?', icon: '🔍' },
-  { label: 'Agent ใครพร้อมรับงาน?', icon: '👥' },
-  { label: 'วิเคราะห์ SLA', icon: '📈' },
-  { label: 'พยากรณ์ชั่วโมงหน้า', icon: '🔮' },
-  { label: 'สรุปผลงานวันนี้', icon: '📋' },
+  { label: 'สรุปสถานะตอนนี้', icon: '◈' },
+  { label: 'Queue ไหนมีปัญหา?', icon: '◇' },
+  { label: 'Agent ใครพร้อมรับงาน?', icon: '◆' },
+  { label: 'วิเคราะห์ SLA', icon: '▣' },
+  { label: 'พยากรณ์ชั่วโมงหน้า', icon: '◎' },
+  { label: 'สรุปผลงานวันนี้', icon: '▤' },
 ];
 
 export default function ChatConsole() {
@@ -44,7 +44,6 @@ export default function ChatConsole() {
     setInput('');
     setAiTyping(true);
 
-    // Create assistant message placeholder
     const assistantId = `assistant-${Date.now()}`;
     addMessage({
       id: assistantId,
@@ -55,7 +54,6 @@ export default function ChatConsole() {
     });
 
     try {
-      // Build conversation history (exclude welcome + loading messages)
       const chatHistory = [...messages, userMessage]
         .filter(m => m.role !== 'system' && !(m as ChatMessage).isLoading)
         .map(m => ({ role: m.role, content: m.content }));
@@ -63,10 +61,7 @@ export default function ChatConsole() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: chatHistory,
-          realtimeData,
-        }),
+        body: JSON.stringify({ messages: chatHistory, realtimeData }),
       });
 
       if (!response.ok) throw new Error('Failed to get response');
@@ -87,7 +82,6 @@ export default function ChatConsole() {
         for (const line of lines) {
           const data = line.slice(6);
           if (data === '[DONE]') continue;
-
           try {
             const parsed = JSON.parse(data);
             if (parsed.error) throw new Error(parsed.error);
@@ -95,9 +89,7 @@ export default function ChatConsole() {
               fullText += parsed.text;
               updateMessage(assistantId, { content: fullText, isLoading: false });
             }
-          } catch {
-            // skip parse errors from partial chunks
-          }
+          } catch { /* skip */ }
         }
       }
 
@@ -121,19 +113,30 @@ export default function ChatConsole() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg-secondary border-l border-border">
+    <div className="flex flex-col h-full bg-bg-secondary/50 backdrop-blur-sm border-l border-border relative">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-cyan to-accent-blue flex items-center justify-center">
-          <Sparkles size={14} className="text-white" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-accent-cyan">JARVIS AI Console</h2>
-          <p className="text-[10px] text-text-muted">Powered by Claude • Genesys Cloud Connected</p>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Zap size={12} className="text-accent-green" />
-          <span className="text-[10px] text-accent-green font-medium">AI Ready</span>
+      <div className="px-4 py-3 border-b border-border bg-bg-primary/40 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* AI icon */}
+            <div className="relative">
+              <div className="w-8 h-8 rounded-sm border border-accent-cyan/30 bg-accent-cyan/5 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent-cyan">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent-green shadow-[0_0_6px_rgba(0,255,136,0.6)]" />
+            </div>
+            <div>
+              <h2 className="font-display text-xs font-bold tracking-[0.15em] text-accent-cyan">JARVIS AI CONSOLE</h2>
+              <p className="text-[8px] font-mono text-text-muted tracking-wider mt-0.5">CLAUDE MODEL • REALTIME CONTEXT</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-sm border border-accent-green/20 bg-accent-green/5">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />
+            <span className="text-[8px] font-display font-semibold tracking-[0.15em] text-accent-green">AI READY</span>
+          </div>
         </div>
       </div>
 
@@ -142,28 +145,21 @@ export default function ChatConsole() {
         {messages.map((msg) => (
           <ChatBubble key={msg.id} message={msg} />
         ))}
-
-        {isAiTyping && messages[messages.length - 1]?.content === '' && (
-          <div className="flex items-center gap-2 text-text-muted text-sm">
-            <Loader2 size={14} className="animate-spin text-accent-cyan" />
-            <span>JARVIS กำลังวิเคราะห์...</span>
-          </div>
-        )}
-
         <div ref={messagesEndRef} />
       </div>
 
       {/* Quick Actions */}
       {messages.length <= 2 && (
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-3">
+          <div className="text-[8px] font-display font-semibold tracking-[0.2em] text-text-muted mb-2">QUICK COMMANDS</div>
           <div className="flex flex-wrap gap-1.5">
             {QUICK_ACTIONS.map((action) => (
               <button
                 key={action.label}
                 onClick={() => sendMessage(action.label)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-bg-card border border-border text-xs text-text-secondary hover:text-accent-cyan hover:border-accent-cyan/30 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border border-border bg-bg-primary/40 text-[11px] text-text-secondary hover:text-accent-cyan hover:border-accent-cyan/30 hover:bg-accent-cyan/5 transition-all duration-200 font-medium"
               >
-                <span>{action.icon}</span>
+                <span className="text-accent-cyan/50 text-[10px]">{action.icon}</span>
                 {action.label}
               </button>
             ))}
@@ -171,38 +167,49 @@ export default function ChatConsole() {
         </div>
       )}
 
-      {/* Input */}
-      <div className="p-3 border-t border-border">
+      {/* Input area */}
+      <div className="p-3 border-t border-border bg-bg-primary/30">
         <div className={cn(
-          'flex items-end gap-2 rounded-lg border bg-bg-primary p-2 transition-all',
-          input ? 'border-accent-cyan/50' : 'border-border',
+          'flex items-end gap-2 rounded-sm border bg-bg-primary/60 p-2 transition-all duration-200',
+          input ? 'border-accent-cyan/30 shadow-[0_0_10px_rgba(0,212,255,0.05)]' : 'border-border',
         )}>
+          <ChevronRight size={14} className={cn(
+            'shrink-0 mb-1 transition-colors',
+            input ? 'text-accent-cyan' : 'text-text-muted'
+          )} />
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="พิมพ์คำถามหรือคำสั่ง..."
+            placeholder="Enter command..."
             rows={1}
-            className="flex-1 bg-transparent text-sm text-text-primary placeholder-text-muted outline-none resize-none max-h-32"
-            style={{ minHeight: '36px' }}
+            className="flex-1 bg-transparent text-sm text-text-primary placeholder-text-muted/50 outline-none resize-none font-mono"
+            style={{ minHeight: '32px' }}
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isAiTyping}
             className={cn(
-              'p-2 rounded-md transition-all',
+              'p-2 rounded-sm transition-all duration-200 shrink-0',
               input.trim() && !isAiTyping
-                ? 'bg-accent-cyan text-bg-primary hover:bg-accent-cyan/80'
-                : 'bg-bg-card text-text-muted cursor-not-allowed',
+                ? 'bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 hover:bg-accent-cyan/25 shadow-[0_0_10px_rgba(0,212,255,0.1)]'
+                : 'bg-bg-card text-text-muted border border-border cursor-not-allowed',
             )}
           >
-            {isAiTyping ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            {isAiTyping ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           </button>
         </div>
-        <p className="text-[10px] text-text-muted mt-1.5 text-center">
-          Enter เพื่อส่ง • Shift+Enter เพื่อขึ้นบรรทัดใหม่
-        </p>
+        <div className="flex items-center justify-between mt-1.5 px-1">
+          <p className="text-[9px] font-mono text-text-muted/40 tracking-wider">
+            ENTER TO SEND • SHIFT+ENTER NEW LINE
+          </p>
+          {isAiTyping && (
+            <p className="text-[9px] font-mono text-accent-cyan/60 tracking-wider animate-pulse">
+              PROCESSING...
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
