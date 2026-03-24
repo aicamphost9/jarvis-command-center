@@ -12,11 +12,11 @@ export default function Home() {
   const { activePanel, fetchRealtimeData } = useAppStore();
 
   useEffect(() => {
-    // Fetch immediately, then poll every 10 seconds
+    // Fetch immediately, then poll every 15 seconds
     fetchRealtimeData();
     const interval = setInterval(() => {
       fetchRealtimeData();
-    }, 10000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [fetchRealtimeData]);
 
