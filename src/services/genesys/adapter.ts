@@ -78,7 +78,7 @@ function transformQueues(
     const waiting = obs?.oWaiting ?? 0;
     const active = obs?.oInteracting ?? 0;
     const offered = agg?.nOffered ?? 0;
-    const abandoned = agg?.tAbandoned ?? 0;
+    const abandoned = agg?.tAbandon ?? 0;
     const sla = agg?.oServiceLevel ?? 0;
     const slaPercent = parseFloat((sla * 100).toFixed(2));
     const abandonRate = offered > 0 ? parseFloat(((abandoned / offered) * 100).toFixed(2)) : 0;
@@ -154,7 +154,7 @@ function calculateOverview(
     totalOffered += agg.nOffered;
     weightedSLA += agg.oServiceLevel * agg.nOffered;
     totalHandleTime += agg.tHandle;
-    totalAbandoned += agg.tAbandoned;
+    totalAbandoned += agg.tAbandon;
   }
 
   const slaPercent = totalOffered > 0

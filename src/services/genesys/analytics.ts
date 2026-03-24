@@ -36,7 +36,7 @@ export interface ConversationAggregate {
   nOffered: number;        // total offered
   nConnected: number;      // total connected
   tAnswered: number;       // total answered
-  tAbandoned: number;      // total abandoned
+  tAbandon: number;      // total abandoned
   tAcd: number;            // total ACD time (ms)
   tHandle: number;         // total handle time (ms)
   nTransferred: number;    // total transferred
@@ -119,7 +119,7 @@ export async function getConversationAggregates(
       'nOffered',
       'nConnected',
       'tAnswered',
-      'tAbandoned',
+      'tAbandon',
       'tAcd',
       'tHandle',
       'nTransferred',
@@ -141,7 +141,7 @@ export async function getConversationAggregates(
   for (const r of result.results) {
     const queueId = r.group.queueId;
     const agg: ConversationAggregate = {
-      nOffered: 0, nConnected: 0, tAnswered: 0, tAbandoned: 0,
+      nOffered: 0, nConnected: 0, tAnswered: 0, tAbandon: 0,
       tAcd: 0, tHandle: 0, nTransferred: 0, tWait: 0,
       tTalk: 0, tHeld: 0, tAcw: 0, oServiceLevel: 0,
     };
